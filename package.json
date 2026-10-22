@@ -1,0 +1,32 @@
+{
+  "name": "@pipeworx/mcp-creative-constraints",
+  "version": "0.1.0",
+  "description": "creative-constraints — an original deck of 162 domain-neutral creative constraints, drawn by category, seeded for reproducibility, with optional no-repeat sessions.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "bin": {
+    "mcp-creative-constraints": "bin/cli.js"
+  },
+  "keywords": ["mcp", "mcp-server", "model-context-protocol", "pipeworx", "creative-constraints"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pipeworx-io/mcp-creative-constraints.git"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "tsx": "^4.19.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@cloudflare/workers-types": "^4.20260405.1"
+  },
+  "pipeworx": {
+    "sourceHash": "v1-4471a8cd37c2a4e1dfc3597cc399e5cdbbcc8760e88377550da184d08c092daf",
+    "sourceCommit": "712a5e0171ea24483214329d0cd7efdfd9b80352"
+  }
+}

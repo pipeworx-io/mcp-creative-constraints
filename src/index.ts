@@ -578,7 +578,47 @@ type ChanceMeta = { seed: string; procedure: string; deck: { id: string; version
  * replacement ACROSS calls.
  */
 
-import { CARDS, CONSTRAINT_CATEGORIES, DECK_ID, DECK_VERSION, type ConstraintCard, type ConstraintCategory } from './cards.js';
+import type { ConstraintCard, ConstraintCategory } from './cards.js';
+
+// fleet #3615: the 162-card deck used to be a module-scope value import from
+// ./cards.js, so every gateway isolate carried the whole deck whether or not
+// it ever served a creative-constraints call. The deck is now a BAKED INDEX:
+// registered in workers/gateway/src/pack-baked-indexes.json, uploaded to KV
+// at deploy, and injected as args._bakedIndex on every call into this pack.
+// NEVER value-import ./cards.js here again — a type-only import is erased, a
+// value import puts the whole deck back into every isolate.
+//
+// CONSTRAINT_CATEGORIES, DECK_ID and DECK_VERSION are small and used in tool
+// definitions (inputSchema enum + descriptions), which must stay computable
+// without the baked data — so they are copied here as literals, identical to
+// cards.ts, rather than taken from the injected deck.
+const DECK_ID = 'creative-constraints';
+const DECK_VERSION = '1';
+const CONSTRAINT_CATEGORIES: ConstraintCategory[] = [
+  'perspective',
+  'limitation',
+  'medium',
+  'time',
+  'audience',
+  'inversion',
+  'scale',
+  'process',
+  'wildcard',
+];
+
+let CARDS: ConstraintCard[] = [];
+function ensureDeck(args: Record<string, unknown>): void {
+  if (CARDS.length) return;
+  const idx = args._bakedIndex as Record<string, unknown> | null | undefined;
+  const cards = idx?.CARDS;
+  if (!Array.isArray(cards) || cards.length === 0) {
+    throw new Error(
+      `creative-constraints: the card deck is unavailable (${idx == null ? 'not injected' : 'malformed'}). ` +
+        'The gateway loads it from KV on the first call into this pack; this is a server-side fault, not a bad query — retry shortly.',
+    );
+  }
+  CARDS = cards as ConstraintCard[];
+}
 
 const SOURCE = `Pipeworx original creative-constraints deck v${DECK_VERSION} — entirely original text, no public-domain or commercial source adapted.`;
 
@@ -740,6 +780,7 @@ const tools: McpToolExport['tools'] = [
 ];
 
 async function callTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  ensureDeck(args);
   switch (name) {
     case 'draw_constraint':
       return drawConstraint(args);
